@@ -29,7 +29,7 @@ library(tm)
 Survey responses were transferred from survey monkey into an excel table. I am then importing the data from excel as a data frame.
 
 ```{r}
-Survey_responses <- read_excel("Downloads/Survey_responses.xlsx")
+Survey_responses <- read_excel("Survey_responses.xlsx")
 dim(Survey_responses)
 ```
 
