@@ -1,0 +1,315 @@
+---
+title: "Final programme with data from survey"
+author: "Luca Kalmar"
+date: "2023-08-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading the required libraries
+
+```{r}
+library(readxl)
+library(stringr)
+library(ggplot2)
+library(knitr)
+library(wordcloud)
+library(RColorBrewer)
+library(wordcloud2)
+library(tm)
+```
+
+
+
+# Importing the data set
+
+Survey responses were transferred from survey monkey into an excel table. I am then importing the data from excel as a data frame.
+
+```{r}
+Survey_responses <- read_excel("Downloads/Survey_responses.xlsx")
+dim(Survey_responses)
+```
+
+The imported data contains 19 rows (the 19 responses) and 10 columns (the responses numbered and the questions).
+
+# Data Cleaning
+
+In this step we will use data cleaning to sort the data which is more open ended as it doesn't have distinct categories (not multiple choice).
+
+### Answers to question 1.
+
+```{r}
+table(Survey_responses$Q1)
+```
+First, we are getting rid of the new line (```\r\n```) characters.
+
+```{r}
+Survey_responses$Q1 <- gsub("\r\n", "", Survey_responses$Q1)
+table(Survey_responses$Q1)
+```
+
+Next, merge very similar groups together.
+
+```{r}
+Survey_responses$Q1 <- gsub("PhD student", "PhD Student", Survey_responses$Q1)
+Survey_responses$Q1 <- gsub("Research Laboratory Technician", "Technician", Survey_responses$Q1)
+Survey_responses$Q1 <- gsub("Staff Bioinformatician", "Bioinformatician", Survey_responses$Q1)
+table(Survey_responses$Q1)
+```
+
+### Answers to question 2
+
+```{r}
+table(Survey_responses$Q2)
+```
+Here, the problem is that while I transferred the responses from surveymonkey to excel sometimes the beginning of the answer starts with lower case instead of upper case.
+
+```{r}
+Survey_responses$Q2 <- str_to_sentence(Survey_responses$Q2) 
+table(Survey_responses$Q2)
+```
+
+### Answers to question 3
+
+This question was totally open ended so it was answered with full sentences but diverse content. Because of this, the answers will be analysed using a word cloud. Cleaning is restricted to the removal of new line characters.
+
+```{r}
+Survey_responses$Q3 <- gsub("\r\n", "", Survey_responses$Q3)
+
+```
+
+### Answers to question 4
+
+Here in question four as in question 2 I have to change the lower case letters at the beginning of the senetence to capital letters.
+
+```{r}
+table(Survey_responses$Q4)
+Survey_responses$Q4 <- str_to_sentence(Survey_responses$Q4) 
+table(Survey_responses$Q4)
+```
+
+### Answers to question 5
+
+Here lots of people skipped the question or responded with very different answers. So, I will pick out key information to use in the data analysis. 
+
+```{r}
+Survey_responses$Q5 <- gsub("\r\n", "", Survey_responses$Q5)
+```
+
+### Answers to question 6
+
+Again, the question was totally open ended so it was answered with full sentences but diverse content. Because of this, the answers will be analysed using a word cloud. Cleaning is restricted to the removal of new line characters.
+
+
+```{r}
+Survey_responses$Q6 <- gsub("\r\n", "", Survey_responses$Q6)
+
+```
+
+### Answers to question 7
+
+Some answers here were very similar so I will try to extract the programming language names to see which programming languages are most popular and useful.
+
+```{r}
+Survey_responses$Q7 <- gsub("\r\n", "", Survey_responses$Q7)
+
+```
+
+### Answers to question 8
+
+As most people knew how to code many people didn't respond ,however, there were some useful recommendations.
+
+```{r}
+Survey_responses$Q8 <- gsub("\r\n", "", Survey_responses$Q8)
+
+```
+
+### Answers to question 9
+
+Some answers here were very similar so I will try to extract the programming language names to see which programming languages the participants are using. Furthermore, most answers answered with operating systems instead of programming languages so I cannot use them in my analysis.
+
+```{r}
+Survey_responses$Q9 <- gsub("\r\n", "", Survey_responses$Q9)
+
+```
+
+# Data analysis
+
+### Occupation of participants (Q1)
+
+```{r}
+ggplot(Survey_responses,aes(Q1)) + geom_bar() + theme_minimal() + coord_flip() + xlab("Occupation") + theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14,face = "bold"))
+```
+
+As shown by the graph the majority of responders were active researchers (postocs and PhD students). However there were also a few support personnel e.g. technicians or bioinformaticians.In this script, the ggplot makes the plot and geom_bar() is responsible for the style of the plot.Moreover, the cood_flip() can be used to flip the graph if the names on the axis overlaps.
+
+### Programming knowledge of participants (Q2)
+
+```{r}
+kable(table(Survey_responses$Q2), col.names = c("Do you use any programming languages?", "Count"))
+```
+
+The kable() is responsible for producing the table which can translate both vectors or data.frames into tables. Based on the responses, the majority are ale to write their own scripts which suggests that most people who participated in my survey most likely use coding extensively as a part of their career.
+
+### Learning the programming principles (Q3)
+
+```{r, warning=FALSE}
+text <- paste(Survey_responses$Q3, collapse = " ")
+docs <- Corpus(VectorSource(text))
+docs <- docs %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs <- tm_map(docs, content_transformer(tolower))
+docs <- tm_map(docs, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(docs) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df <- data.frame(word = names(words),freq=words)
+set.seed(1234) # for reproducibility 
+wordcloud(words = df$word, freq = df$freq, min.freq = 1, max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
+```
+
+
+The word cloud shows that the majority of participants liked to learn by trial and error. There were also some other answers that stood out such as: learning how to programme at university, online courses, programming games,academy courses and programming during a degree. I got most of this code from this link : https://towardsdatascience.com/create-a-word-cloud-with-r-bde3e7422e8a
+
+### Usefulness of coding games in learning programming (Q4)
+
+
+```{r}
+df <- as.data.frame(table(Survey_responses$Q4))
+df$prop <- df$Freq/sum(df$Freq)*100
+kable(df, col.names = c("Was using a coding game helpful?", "Count", "Proportion"))
+
+
+```
+
+The table shows, that only about one thrird of participants used a coding game before learning programming for work. We can use this result later to make show correlations with different questions. I am using kable() again to produce the table however, There were more varied answers here so it made sense to do proportion instead of count to show how answers varied.
+
+### The ways using a coding game helped (Q5)
+
+
+```{r}
+
+v <- Survey_responses$Q5
+v <- v[v != "Respondent skipped this question"]
+v <- v[v != "N/A"]
+v <- v[v != "n/a"]
+v <- v[v != "NA"]
+v <- v[v != "my answer was no"]
+v <- v[v != "I did not use a coding game"]
+
+```
+
+
+
+The majority of respondents answered negatively or skipped the question. Therefore, I removed all the negative answers and listed all the positive answers as quotes. This code changes the variable v every time you put something in the square brackets.
+
+
+
+```{r results="asis"}
+for (i in v){
+  cat(paste0("\n_\"",i,"\"_\n"))
+}
+```
+ This code produces the quotes, I did not fógive names to any of them due to my participants being anonymous.
+
+### Recommendations for someone strating out in programming (Q6)
+
+```{r, warning=FALSE}
+text <- paste(Survey_responses$Q6, collapse = " ")
+docs <- Corpus(VectorSource(text))
+docs <- docs %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs <- tm_map(docs, content_transformer(tolower))
+docs <- tm_map(docs, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(docs) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df <- data.frame(word = names(words),freq=words)
+set.seed(1234) # for reproducibility 
+wordcloud(words = df$word, freq = df$freq, min.freq = 1, max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
+```
+<br>
+Evidently, the words that stood out most were : project,code,small,task and course. This suggests that people who know how to code thought that the best way to start programming is to do a project -which is important to you or you find fun and easy-  and learn by doing instead of using a book. This is also a word cloud so I used the same code as for question 3.
+<br>
+
+### Most useful coding languages in research(Q7)
+
+```{r, warning=FALSE}
+
+Survey_responses$Q7 <- str_to_title(Survey_responses$Q7) 
+plangs <- c("Python" = 0 , "R" = 0 , "Bash" = 0 , "C#" = 0 , "Ruby" = 0 , "Javascript" = 0 , "Java" = 0 , "Sql" = 0)
+for(i in Survey_responses$Q7){
+  for(j in names(plangs)){
+    if(length(grep(j,i)) == 1){
+      plangs[j] <-  plangs[j]+1
+    }
+  }
+}
+df <- data.frame("programming_languages" = names(plangs), "count" = unname(plangs))
+ggplot(df,aes(programming_languages,count))+geom_col() + theme_minimal() + xlab("Programming languages") + theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14,face = "bold"))
+```
+<br><br>
+
+
+The results for this question was varied despite the fact that I wated it to have a short answer. I feel 'the my opinion' phrase in the question caused some participants to elaborate too much so it was difficult to figure out how to pick out the data I could do something with. The results from these nineteen participants shows that , at the moment, R and python are the most popular and useful programming laguages as well as Bash following them. Due to the fact that there were many different parts to these answers that I wanted to pick out I couldn't use table() because my answers did not fit into categories due to the varied answers.
+<br><br>
+
+
+### The eed to learn coding if you don't know how to code yet. (Q8)
+<br>
+
+```{r, warning=FALSE}
+t <- Survey_responses$Q8
+t <- t[t!= "N/A"]
+t <- t[t!= "NA"]
+t <- t[t!= "Respondent skipped this question"]
+
+text <- paste(t, collapse = " ")
+docs <- Corpus(VectorSource(text))
+docs <- docs %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs <- tm_map(docs, content_transformer(tolower))
+docs <- tm_map(docs, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(docs) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df <- data.frame(word = names(words),freq=words)
+set.seed(1234) # for reproducibility 
+wordcloud(words = df$word, freq = df$freq, min.freq = 1, max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
+```
+
+I made a new variable for question eight as I wanted to practice writing the code out so that I will knwo what to do in the future. However, I could have used another a variable I used before to avoid the build up of unknown letters/symbols in the environment.
+
+### Programming languages reearchers currently use. (Q9)
+
+<br>
+```{r, warning=FALSE}
+Survey_responses$Q9 <- str_to_title(Survey_responses$Q9) 
+plangs <- c("Python" = 0 , "R" = 0 , "Bash" = 0 , "C#" = 0 , "Ruby" = 0 , "Javascript" = 0 , "Java" = 0 , "Sql" = 0 , "Nextflow" = 0 , "Matlab" = 0 )
+for(i in Survey_responses$Q9){
+  for(j in names(plangs)){
+    if(length(grep(j,i)) == 1){
+      plangs[j] <-  plangs[j]+1
+    }
+  }
+}
+df <- data.frame("programming_languages" = names(plangs), "count" = unname(plangs))
+ggplot(df,aes(programming_languages,count))+geom_col() + theme_minimal() + coord_flip() + xlab("Programming languages used currently") + theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14,face = "bold"))
+```
+
+
+Question nine was very similar to question seven when comparing the answers. Therefore, the only thing that I will do for question nine in terms of analysis is adjusting the code for question seven by adding more programming languages to the 'plangs' variable and changing the x-axis title. I am also adding back the flipping command because the text overlaps on the x axis.
+
+# Summary
+
+In this guide to analysing this data set, we have learned about simple data analysis and data cleaning to produce visual diagrams which can be used to draw conclusions about your data. You have learnt how to : use packages and load them at the beginning your code, change the case of your qualitative answers so that your commands can recognise it and assign answers to variables.
+
