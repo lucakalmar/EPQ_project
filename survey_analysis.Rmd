@@ -29,17 +29,19 @@ library(tm)
 Survey responses were transferred from survey monkey into an excel table. I am then importing the data from excel as a data frame.
 
 ```{r}
-Survey_responses <- read_excel("Survey_responses.xlsx")
+Survey_responses <- read_excel("Downloads/Survey_responses.xlsx")
 dim(Survey_responses)
 ```
 
 The imported data contains 19 rows (the 19 responses) and 10 columns (the responses numbered and the questions).
+<br>
 
 # Data Cleaning
 
 In this step we will use data cleaning to sort the data which is more open ended as it doesn't have distinct categories (not multiple choice).
+<br>
 
-### Answers to question 1.
+### Answers to question 1
 
 ```{r}
 table(Survey_responses$Q1)
@@ -59,9 +61,10 @@ Survey_responses$Q1 <- gsub("Research Laboratory Technician", "Technician", Surv
 Survey_responses$Q1 <- gsub("Staff Bioinformatician", "Bioinformatician", Survey_responses$Q1)
 table(Survey_responses$Q1)
 ```
+<br>
 
 ### Answers to question 2
-
+<br>
 ```{r}
 table(Survey_responses$Q2)
 ```
@@ -71,18 +74,20 @@ Here, the problem is that while I transferred the responses from surveymonkey to
 Survey_responses$Q2 <- str_to_sentence(Survey_responses$Q2) 
 table(Survey_responses$Q2)
 ```
+<br>
 
 ### Answers to question 3
-
+<br>
 This question was totally open ended so it was answered with full sentences but diverse content. Because of this, the answers will be analysed using a word cloud. Cleaning is restricted to the removal of new line characters.
 
 ```{r}
 Survey_responses$Q3 <- gsub("\r\n", "", Survey_responses$Q3)
 
 ```
+<br>
 
 ### Answers to question 4
-
+<br>
 Here in question four as in question 2 I have to change the lower case letters at the beginning of the senetence to capital letters.
 
 ```{r}
@@ -90,17 +95,19 @@ table(Survey_responses$Q4)
 Survey_responses$Q4 <- str_to_sentence(Survey_responses$Q4) 
 table(Survey_responses$Q4)
 ```
+<br>
 
 ### Answers to question 5
-
+<br>
 Here lots of people skipped the question or responded with very different answers. So, I will pick out key information to use in the data analysis. 
 
 ```{r}
 Survey_responses$Q5 <- gsub("\r\n", "", Survey_responses$Q5)
 ```
+<br>
 
 ### Answers to question 6
-
+<br>
 Again, the question was totally open ended so it was answered with full sentences but diverse content. Because of this, the answers will be analysed using a word cloud. Cleaning is restricted to the removal of new line characters.
 
 
@@ -108,6 +115,7 @@ Again, the question was totally open ended so it was answered with full sentence
 Survey_responses$Q6 <- gsub("\r\n", "", Survey_responses$Q6)
 
 ```
+<br>
 
 ### Answers to question 7
 
@@ -117,6 +125,7 @@ Some answers here were very similar so I will try to extract the programming lan
 Survey_responses$Q7 <- gsub("\r\n", "", Survey_responses$Q7)
 
 ```
+<br>
 
 ### Answers to question 8
 
@@ -126,6 +135,7 @@ As most people knew how to code many people didn't respond ,however, there were 
 Survey_responses$Q8 <- gsub("\r\n", "", Survey_responses$Q8)
 
 ```
+<br>
 
 ### Answers to question 9
 
@@ -135,6 +145,7 @@ Some answers here were very similar so I will try to extract the programming lan
 Survey_responses$Q9 <- gsub("\r\n", "", Survey_responses$Q9)
 
 ```
+<br>
 
 # Data analysis
 
@@ -145,6 +156,7 @@ ggplot(Survey_responses,aes(Q1)) + geom_bar() + theme_minimal() + coord_flip() +
 ```
 
 As shown by the graph the majority of responders were active researchers (postocs and PhD students). However there were also a few support personnel e.g. technicians or bioinformaticians.In this script, the ggplot makes the plot and geom_bar() is responsible for the style of the plot.Moreover, the cood_flip() can be used to flip the graph if the names on the axis overlaps.
+<br> 
 
 ### Programming knowledge of participants (Q2)
 
@@ -153,6 +165,8 @@ kable(table(Survey_responses$Q2), col.names = c("Do you use any programming lang
 ```
 
 The kable() is responsible for producing the table which can translate both vectors or data.frames into tables. Based on the responses, the majority are ale to write their own scripts which suggests that most people who participated in my survey most likely use coding extensively as a part of their career.
+
+<br>
 
 ### Learning the programming principles (Q3)
 
@@ -174,7 +188,9 @@ wordcloud(words = df$word, freq = df$freq, min.freq = 1, max.words=200, random.o
 ```
 
 
-The word cloud shows that the majority of participants liked to learn by trial and error. There were also some other answers that stood out such as: learning how to programme at university, online courses, programming games,academy courses and programming during a degree. I got most of this code from this link : https://towardsdatascience.com/create-a-word-cloud-with-r-bde3e7422e8a
+The word cloud (Rul, 2019) shows that the majority of participants liked to learn by trial and error. There were also some other answers that stood out such as: learning how to programme at university, online courses, programming games,academy courses and programming during a degree.
+
+<br>
 
 ### Usefulness of coding games in learning programming (Q4)
 
@@ -188,6 +204,7 @@ kable(df, col.names = c("Was using a coding game helpful?", "Count", "Proportion
 ```
 
 The table shows, that only about one thrird of participants used a coding game before learning programming for work. We can use this result later to make show correlations with different questions. I am using kable() again to produce the table however, There were more varied answers here so it made sense to do proportion instead of count to show how answers varied.
+<br>
 
 ### The ways using a coding game helped (Q5)
 
@@ -216,6 +233,7 @@ for (i in v){
 }
 ```
  This code produces the quotes, I did not fógive names to any of them due to my participants being anonymous.
+<br>
 
 ### Recommendations for someone strating out in programming (Q6)
 
@@ -255,14 +273,15 @@ for(i in Survey_responses$Q7){
 df <- data.frame("programming_languages" = names(plangs), "count" = unname(plangs))
 ggplot(df,aes(programming_languages,count))+geom_col() + theme_minimal() + xlab("Programming languages") + theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14,face = "bold"))
 ```
-<br><br>
+<br>
 
 
 The results for this question was varied despite the fact that I wated it to have a short answer. I feel 'the my opinion' phrase in the question caused some participants to elaborate too much so it was difficult to figure out how to pick out the data I could do something with. The results from these nineteen participants shows that , at the moment, R and python are the most popular and useful programming laguages as well as Bash following them. Due to the fact that there were many different parts to these answers that I wanted to pick out I couldn't use table() because my answers did not fit into categories due to the varied answers.
-<br><br>
+<br>
 
 
 ### The eed to learn coding if you don't know how to code yet. (Q8)
+
 <br>
 
 ```{r, warning=FALSE}
@@ -305,11 +324,12 @@ for(i in Survey_responses$Q9){
 df <- data.frame("programming_languages" = names(plangs), "count" = unname(plangs))
 ggplot(df,aes(programming_languages,count))+geom_col() + theme_minimal() + coord_flip() + xlab("Programming languages used currently") + theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14,face = "bold"))
 ```
-
+<br>
 
 Question nine was very similar to question seven when comparing the answers. Therefore, the only thing that I will do for question nine in terms of analysis is adjusting the code for question seven by adding more programming languages to the 'plangs' variable and changing the x-axis title. I am also adding back the flipping command because the text overlaps on the x axis.
+<br>
 
 # Summary
-
+<br>
 In this guide to analysing this data set, we have learned about simple data analysis and data cleaning to produce visual diagrams which can be used to draw conclusions about your data. You have learnt how to : use packages and load them at the beginning your code, change the case of your qualitative answers so that your commands can recognise it and assign answers to variables.
 
